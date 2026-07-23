@@ -1,99 +1,110 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
-// Import semua komponen yang sudah kita pisah
-import Loader from './components/Loader';
-import Hero from './components/Hero';
-import About from './components/About';
-import Skills from './components/Skills';
-import Projects from './components/Projects';
-import Contact from './components/Contact';
-
-// Style bawaan (jika nanti mau dipindah ke index.css juga bisa)
-const CustomStyles = () => (
-  <style>{`
-    :root {
-      --deep-dark: #0a0a0f;
-      --surface: #111118;
-      --primary: #06b6d4;
-      --secondary: #8b5cf6;
-      --accent: #f43f5e;
-      --text-primary: #e2e8f0;
-      --text-muted: #64748b;
-    }
-    body {
-      background-color: var(--deep-dark);
-      color: var(--text-primary);
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      overflow-x: hidden;
-    }
-    @keyframes marquee {
-      0% { transform: translateX(0%); }
-      100% { transform: translateX(-50%); }
-    }
-    .animate-marquee {
-      animation: marquee 25s linear infinite;
-      display: flex;
-      width: max-content;
-    }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-    .animate-blink {
-      animation: blink 530ms infinite;
-    }
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: var(--deep-dark); }
-    ::-webkit-scrollbar-thumb { background: var(--surface); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-  `}</style>
-);
+// Import komponen dari folder components
+import Loader from "./components/loader.jsx";
+import Hero from "./components/hero.jsx";
+import About from "./components/about.jsx";
+import Skills from "./components/skills.jsx";
+import Projects from "./components/projects.jsx";
+import Contact from "./components/contact.jsx";
 
 export default function App() {
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeNav, setActiveNav] = useState("home");
+
+  // Efek durasi animasi loader saat halaman pertama kali dibuka
+  useEffect(() => {
+    // Mencegah scroll saat masih loading
+    if (isLoading) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000); // 2 detik loading
+
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+
+  // Handler untuk smooth scroll navigasi
+  const scrollToSection = (id) => {
+    setActiveNav(id);
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const navItems = [
+    { id: "hero", label: "Home" },
+    { id: "about", label: "About" },
+    { id: "skills", label: "Skills" },
+    { id: "projects", label: "Projects" },
+    { id: "contact", label: "Contact" },
+  ];
 
   return (
-    <div className="relative flex flex-col w-full bg-[#0a0a0f] min-h-screen selection:bg-[#06b6d4]/30 selection:text-white">
-      <CustomStyles />
-      <AnimatePresence>
-        {loading && <Loader onComplete={() => setLoading(false)} />}
+    <div className="bg-[#0a0a0f] min-h-screen text-[#e2e8f0] font-sans selection:bg-[#06b6d4] selection:text-white relative">
+      {/* Screen Loader Animasi */}
+      <AnimatePresence mode="wait">
+        {isLoading && <Loader key="loader" />}
       </AnimatePresence>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: loading ? 0 : 1 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-      >
-        {/* Navbar */}
-        <nav className="fixed top-0 w-full z-50 bg-[#0a0a0f]/80 backdrop-blur-md border-b border-[#111118]">
-          <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-            <span className="text-[#e2e8f0] font-bold text-xl tracking-tighter">
-              Daniel<span className="text-[#06b6d4]">.</span>
-            </span>
-            <div className="hidden md:flex space-x-8 text-sm font-medium text-[#64748b]">
-              <span className="hover:text-[#e2e8f0] cursor-pointer transition-colors">About</span>
-              <span className="hover:text-[#e2e8f0] cursor-pointer transition-colors">Matrix</span>
-              <span className="hover:text-[#e2e8f0] cursor-pointer transition-colors">Architecture</span>
-              <span className="hover:text-[#e2e8f0] cursor-pointer transition-colors">Portal</span>
-            </div>
-          </div>
-        </nav>
+      {/* Konten Utama Portofolio */}
+      {!isLoading && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          className="flex flex-col min-h-screen relative"
+        >
+          {/* Floating Sticky Navbar */}
+          <header className="fixed top-6 inset-x-0 z-50 flex justify-center px-4">
+            <nav className="flex items-center space-x-1 md:space-x-2 px-4 py-2.5 rounded-full bg-[#12121a]/80 backdrop-blur-md border border-[#1e1e2d] shadow-2xl shadow-black/50">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => scrollToSection(item.id)}
+                  className={`px-3 py-1.5 text-xs md:text-sm font-medium rounded-full transition-all duration-300 ${
+                    activeNav === item.id
+                      ? "bg-[#06b6d4] text-black shadow-md shadow-[#06b6d4]/20"
+                      : "text-[#94a3b8] hover:text-white hover:bg-[#1e1e2d]"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          </header>
 
-        {/* Panggil komponen di sini */}
-        <Hero />
-        <About />
-        <Skills />
-        <Projects />
-        <Contact />
-        
-        <footer className="py-8 text-center border-t border-[#111118] bg-[#0a0a0f]">
-          <p className="text-[#64748b] text-sm">
-            © 2026 Daniel Charlie Samuel Siburian. Politeknik Negeri Batam.
-          </p>
-        </footer>
-      </motion.div>
+          {/* Section Hero / Header Utama */}
+          <div id="hero">
+            <Hero />
+          </div>
+
+          <main className="flex-grow space-y-12">
+            {/* Section Tentang Saya */}
+            <About />
+
+            {/* Section Keahlian & Tech Stack */}
+            <Skills />
+
+            {/* Section Proyek Unggulan */}
+            <Projects />
+
+            {/* Section Kontak */}
+            <Contact />
+          </main>
+
+          {/* Footer Sederhana */}
+          <footer className="py-8 border-t border-[#1e1e2d] text-center text-sm text-[#64748b] bg-[#0a0a0f] mt-20">
+            <p>© {new Date().getFullYear()} Daniel. All rights reserved.</p>
+          </footer>
+        </motion.div>
+      )}
     </div>
   );
 }
